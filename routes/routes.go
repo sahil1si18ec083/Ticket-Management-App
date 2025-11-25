@@ -5,27 +5,26 @@ import (
 	"ticket-app-gin-golang/middleware"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
+func RegisterRoutes(r *gin.Engine, authController *controllers.AuthController, ticketController *controllers.TicketController) {
 
-	// Route registrations go here
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
+
 	auth := v1.Group("/auth")
 	{
-		auth.POST("/signup", controllers.SignUpController)
-		auth.POST("/login", controllers.LoginController)
-
+		auth.POST("/signup", authController.Signup)
+		auth.POST("/login", authController.Login)
 	}
+
 	ticket := v1.Group("/ticket")
 	ticket.Use(middleware.AuthMiddleware())
 	{
-		ticket.GET("/", controllers.GetUserTicketsController)
-		ticket.GET("/:id", controllers.GetTicketByIDController)
-		ticket.POST("/", controllers.CreateTicketController)
-		ticket.DELETE("/:id", controllers.DeleteTicketByIDController)
-		ticket.PUT("/:id", controllers.UpdateTicketByIDController)
+		ticket.POST("/", ticketController.CreateTicket)
+		ticket.GET("/", ticketController.GetUserTickets)
+		ticket.GET("/:id", ticketController.GetTicketByID)
+		ticket.PUT("/:id", ticketController.UpdateTicket)
+		ticket.DELETE("/:id", ticketController.DeleteTicket)
 	}
 }

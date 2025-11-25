@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
-
+	"strconv"
 	"ticket-app-gin-golang/utils"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +10,7 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("this is logging my auth middleware")
+
 		token := c.GetHeader("Authorization")
 		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -19,6 +18,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			})
 			return
 		}
+
 		claims, flag := utils.VerifyToken(token)
 		if !flag {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -26,9 +26,19 @@ func AuthMiddleware() gin.HandlerFunc {
 			})
 			return
 		}
-		c.Set("userID", claims.Subject)
+
+		// Convert claims.Subject (string) → uint
+		userIDInt, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid token subject",
+			})
+			return
+		}
+
+		// store as uint
+		c.Set("userID", uint(userIDInt))
+
 		c.Next()
-
 	}
-
 }
