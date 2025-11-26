@@ -16,6 +16,7 @@ func RegisterRoutes(r *gin.Engine, authController *controllers.AuthController, t
 	{
 		auth.POST("/signup", authController.Signup)
 		auth.POST("/login", authController.Login)
+		auth.POST("/reset-password", authController.RequestPasswordReset)
 	}
 
 	ticket := v1.Group("/ticket")

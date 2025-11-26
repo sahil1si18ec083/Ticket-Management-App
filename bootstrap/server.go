@@ -13,7 +13,8 @@ import (
 func InitServer(db *gorm.DB) *gin.Engine {
 
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo)
+	passwordResetRepo := repositories.NewPasswordResetRepository(db)
+	authService := services.NewAuthService(userRepo, passwordResetRepo)
 	authController := controllers.NewAuthController(authService)
 
 	ticketRepo := repositories.NewTicketRepository(db)
