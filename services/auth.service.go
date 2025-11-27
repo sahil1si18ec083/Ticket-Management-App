@@ -124,7 +124,10 @@ func (s *AuthService) sendPasswordResetEmail(email, token string) error {
 	from := os.Getenv("FROM_EMAIL_ADDRESS")
 	to := []string{email}
 	subject := "Password Reset Request"
-	body := fmt.Sprintf("Use the following token to reset your password: %s", token)
+	body := fmt.Sprintf(
+		"Use the following token to reset your password (expires in 15 minutes): %s",
+		token,
+	)
 	mesage := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", from, email, subject, body)
 	msg := []byte(mesage)
 	emailPassword := os.Getenv("EMAIL_PASSWORD")
@@ -163,7 +166,7 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	fmt.Println(res)
 	if err != nil || len(res) == 0 {
 		fmt.Println(err)
-		return errors.New("no active tokens found")
+		return errors.New("invalid or expired reset token")
 	}
 	var matchedReset *models.PasswordResets
 	for _, val := range res {
