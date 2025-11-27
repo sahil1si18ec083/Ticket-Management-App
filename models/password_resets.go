@@ -12,4 +12,5 @@ type PasswordResets struct {
 	User      User      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	TokenHash string    `json:"token_hash"`
 	ExpiresAt time.Time `json:"expires_at"`
+	IsUsed    bool      `json:"is_used"`
 }

@@ -101,8 +101,11 @@ func (s *AuthService) ForgetPasswordReset(email string) (string, error) {
 		TokenHash: hashedToken,
 		ExpiresAt: time.Now().Add(utils.PasswordResetTokenExpiry),
 		UserID:    user.ID,
+		IsUsed:    false,
 	})
+	// handle above error
 	if err != nil {
+
 		fmt.Println(err)
 		return "", errors.New("failed to create password reset record")
 	}
@@ -156,7 +159,10 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	userId := user.ID
 	fmt.Println(userId)
 	res, err := s.NewPasswordResetRepository.FindActiveByUserID(userId)
+	fmt.Println(err)
+	fmt.Println(res)
 	if err != nil || len(res) == 0 {
+		fmt.Println(err)
 		return errors.New("no active tokens found")
 	}
 	var matchedReset *models.PasswordResets
@@ -169,10 +175,25 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	if matchedReset == nil {
 		return errors.New("invalid or expired reset token")
 	}
-	currentTime := time.Now().UTC()
+	currentTime := time.Now()
 	if !matchedReset.ExpiresAt.After(currentTime) {
 		fmt.Println("old token ")
 		return errors.New("invalid or expired reset token")
+	}
+	matchedReset.IsUsed = true
+	err = s.NewPasswordResetRepository.Update(matchedReset)
+	if err != nil {
+		return errors.New("unable to  expire reset token")
+	}
+
+	newhashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return errors.New("failed to hash new password")
+	}
+	user.Password = newhashedPassword
+	err = s.userRepo.DB.Save(user).Error
+	if err != nil {
+		return errors.New("failed to update user password")
 	}
 
 	return nil

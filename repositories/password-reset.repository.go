@@ -19,8 +19,17 @@ func (r *PasswordResetRepository) Create(passwordReset *models.PasswordResets) e
 }
 func (r *PasswordResetRepository) FindActiveByUserID(userID uint) ([]models.PasswordResets, error) {
 	var users []models.PasswordResets
-	result := r.DB.Where("user_id = ?", userID).Find(&users)
+	// Only return unused reset tokens for the user
+	result := r.DB.Where("user_id = ? AND is_used = ?", userID, false).Find(&users)
 
 	return users, result.Error
 
+}
+func (r *PasswordResetRepository) MarkedAsUsed() error {
+	return nil
+
+}
+
+func (r *PasswordResetRepository) Update(val *models.PasswordResets) error {
+	return r.DB.Save(val).Error
 }
