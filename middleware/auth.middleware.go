@@ -1,43 +1,52 @@
+// middleware/auth.go
 package middleware
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
+	"os"
+	"strings"
 	"ticket-app-gin-golang/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		token := c.GetHeader("Authorization")
-		if token == "" {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authorization token not provided",
+				"error": "authorization header missing",
 			})
 			return
 		}
 
-		claims, flag := utils.VerifyToken(token)
-		if !flag {
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		claims := &utils.JWTClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenString, claims,
+			func(t *jwt.Token) (interface{}, error) {
+				return []byte(os.Getenv("JWT_SECRET")), nil
+			},
+		)
+
+		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authorization token wrong",
+				"error": "invalid token",
 			})
 			return
 		}
 
-		// Convert claims.Subject (string) → uint
-		userIDInt, err := strconv.Atoi(claims.Subject)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid token subject",
-			})
-			return
-		}
-
-		// store as uint
-		c.Set("userID", uint(userIDInt))
+		// ✅ Save values to context
+		fmt.Println(claims.Role)
+		fmt.Println(claims.UserID)
+		x := claims.UserID
+		fmt.Printf("%T", x)
+		c.Set("userID", claims.UserID)
+		c.Set("role", claims.Role)
 
 		c.Next()
 	}

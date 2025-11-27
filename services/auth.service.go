@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/smtp"
 	"os"
-	"strconv"
 	"time"
 
 	"ticket-app-gin-golang/models"
@@ -51,7 +50,7 @@ func (s *AuthService) Signup(name, email, password string) (string, error) {
 	}
 
 	// generate token
-	token, err := utils.GenerateToken(strconv.Itoa(int(user.ID)))
+	token, err := utils.GenerateToken(user.ID, string(user.Role))
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}
@@ -73,7 +72,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	}
 
 	// generate token
-	token, err := utils.GenerateToken(strconv.Itoa(int(user.ID)))
+	token, err := utils.GenerateToken(user.ID, string(user.Role))
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}
