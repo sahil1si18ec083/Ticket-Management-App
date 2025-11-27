@@ -147,3 +147,33 @@ func (s *AuthService) sendPasswordResetEmail(email, token string) error {
 	return nil
 
 }
+
+func (s *AuthService) ResetPassword(email, token, newPassword string) error {
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil {
+		return errors.New("invalid email or password")
+	}
+	userId := user.ID
+	fmt.Println(userId)
+	res, err := s.NewPasswordResetRepository.FindActiveByUserID(userId)
+	if err != nil || len(res) == 0 {
+		return errors.New("no active tokens found")
+	}
+	var matchedReset *models.PasswordResets
+	for _, val := range res {
+		if utils.CheckPasswordHash(token, val.TokenHash) {
+			matchedReset = &val
+			break
+		}
+	}
+	if matchedReset == nil {
+		return errors.New("invalid or expired reset token")
+	}
+	currentTime := time.Now().UTC()
+	if !matchedReset.ExpiresAt.After(currentTime) {
+		fmt.Println("old token ")
+		return errors.New("invalid or expired reset token")
+	}
+
+	return nil
+}

@@ -11,9 +11,11 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// type PasswordResetRequest struct {
-// 	Email string `json:"email" binding:"required,email"`
-// }
+type PasswordResetRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	TokenHash   string `json:"token_hash" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
 
 type ForgetPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"ticket-app-gin-golang/models"
 	"ticket-app-gin-golang/services"
@@ -78,5 +79,22 @@ func (ac *AuthController) ForgetPassword(c *gin.Context) {
 
 }
 func (ac *AuthController) ResetPassword(c *gin.Context) {
+	var req models.PasswordResetRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	err = ac.service.ResetPassword(req.Email, req.TokenHash, req.NewPassword)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Password has been reset successfully",
+	})
 
 }
