@@ -3,6 +3,8 @@ package services
 import (
 	"errors"
 	"fmt"
+	"net/smtp"
+	"os"
 	"strconv"
 	"time"
 
@@ -79,12 +81,9 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	return token, nil
 }
 
-func (s *AuthService) RequestPasswordReset(email string) (string, error) {
+func (s *AuthService) ForgetPasswordReset(email string) (string, error) {
 
 	user, err := s.userRepo.FindByEmail(email)
-	fmt.Println("bye")
-	fmt.Println(user.ID)
-	fmt.Println("hi")
 	if err != nil {
 		return "", errors.New("invalid email or password")
 	}
@@ -110,18 +109,41 @@ func (s *AuthService) RequestPasswordReset(email string) (string, error) {
 
 	// Send password reset email
 	if err := s.sendPasswordResetEmail(email, token); err != nil {
-		fmt.Println("Warning: failed to send password reset email:", err)
-		// Don't fail the request if email sending fails
-		// The reset token is still valid in the database
 		return "", errors.New("failed to send password reset email")
+
 	}
 
 	return token, nil
 
 }
 func (s *AuthService) sendPasswordResetEmail(email, token string) error {
-	// Placeholder for email sending logic
-	// In a real application, integrate with an email service provider here
-	fmt.Printf("Sending password reset email to %s with token: %s\n", email, token)
+
+	from := os.Getenv("FROM_EMAIL_ADDRESS")
+	to := []string{email}
+	subject := "Password Reset Request"
+	body := fmt.Sprintf("Use the following token to reset your password: %s", token)
+	mesage := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", from, email, subject, body)
+	msg := []byte(mesage)
+	emailPassword := os.Getenv("EMAIL_PASSWORD")
+	smtpHost := os.Getenv("SMTP_HOST")
+	auth := smtp.PlainAuth(
+		"",
+		from,
+		emailPassword,
+		smtpHost,
+	)
+	smtpport := os.Getenv("SMTP_PORT")
+	addrstring := fmt.Sprintf("%s:%s", smtpHost, smtpport)
+	err := smtp.SendMail(
+		addrstring,
+		auth,
+		from,
+		to,
+		msg,
+	)
+	if err != nil {
+		return err
+	}
 	return nil
+
 }

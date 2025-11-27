@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"ticket-app-gin-golang/models"
 	"ticket-app-gin-golang/services"
@@ -63,24 +62,21 @@ func (ac *AuthController) Login(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) RequestPasswordReset(c *gin.Context) {
-	var req models.PasswordResetRequest
+func (ac *AuthController) ForgetPassword(c *gin.Context) {
+	var req models.ForgetPasswordRequest
 	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 	// check email is valid
-	token, err := ac.service.RequestPasswordReset(req.Email)
-	if err != nil {
+	ac.service.ForgetPasswordReset(req.Email)
 
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	fmt.Println(token)
 	c.JSON(200, gin.H{
-		"message": token,
+		"message": "If the email exists, a reset link has been sent",
 	})
+
+}
+func (ac *AuthController) ResetPassword(c *gin.Context) {
 
 }
