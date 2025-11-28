@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"ticket-app-gin-golang/models"
 	"ticket-app-gin-golang/services"
 
@@ -12,12 +14,13 @@ type TicketController struct {
 }
 
 func NewTicketController(service *services.TicketService) *TicketController {
-	return &TicketController{service: service}
+	return &TicketController{
+		service: service,
+	}
 }
 
 // ----------------- Create -----------------
 func (tc *TicketController) CreateTicket(c *gin.Context) {
-
 	userID := c.GetUint("userID")
 
 	var req models.TicketRequest
@@ -42,7 +45,11 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 func (tc *TicketController) GetUserTickets(c *gin.Context) {
 	userID := c.GetUint("userID")
 
-	tickets, err := tc.service.GetUserTickets(userID)
+	role, exists := c.Get("role")
+	fmt.Println(exists)
+	fmt.Println("role is ", role)
+
+	tickets, err := tc.service.GetUserTickets(userID, role.(string))
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch tickets"})
 		return
@@ -53,16 +60,21 @@ func (tc *TicketController) GetUserTickets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"tickets": tickets})
+	c.JSON(200, gin.H{
+		"tickets": tickets,
+	})
 }
 
 // ----------------- Get By ID -----------------
 func (tc *TicketController) GetTicketByID(c *gin.Context) {
-
 	userID := c.GetUint("userID")
 	id := c.Param("id")
 
-	ticket, err := tc.service.GetTicketByID(userID, id)
+	role, exists := c.Get("role")
+	fmt.Println(exists)
+	fmt.Println("role is ", role)
+
+	ticket, err := tc.service.GetTicketByID(userID, id, role.(string))
 	if err != nil {
 		c.JSON(404, gin.H{"error": err.Error()})
 		return
@@ -73,7 +85,6 @@ func (tc *TicketController) GetTicketByID(c *gin.Context) {
 
 // ----------------- Update -----------------
 func (tc *TicketController) UpdateTicket(c *gin.Context) {
-
 	userID := c.GetUint("userID")
 	id := c.Param("id")
 
@@ -97,15 +108,20 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 
 // ----------------- Delete -----------------
 func (tc *TicketController) DeleteTicket(c *gin.Context) {
-
 	userID := c.GetUint("userID")
 	id := c.Param("id")
 
-	err := tc.service.DeleteTicketByID(userID, id)
+	role, exists := c.Get("role")
+	fmt.Println(exists)
+	fmt.Println("role is ", role)
+
+	err := tc.service.DeleteTicketByID(userID, id, role.(string))
 	if err != nil {
 		c.JSON(404, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Ticket deleted successfully"})
+	c.JSON(200, gin.H{
+		"message": "Ticket deleted successfully",
+	})
 }

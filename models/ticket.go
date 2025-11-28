@@ -8,5 +8,5 @@ type Ticket struct {
 	User    User   `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
-	Status  string `json:"status"`
+	Status  Status `gorm:"type:varchar(20);not null;default:'NEW'" json:"status"`
 }
