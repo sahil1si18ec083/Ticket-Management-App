@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
 
 	"ticket-app-gin-golang/models"
 	"ticket-app-gin-golang/services"
@@ -17,6 +17,23 @@ func NewTicketController(service *services.TicketService) *TicketController {
 	return &TicketController{
 		service: service,
 	}
+}
+
+func (tc *TicketController) getUserAndRole(c *gin.Context) (uint, string, error) {
+	userID := c.GetUint("userID")
+
+	roleVal, ok := c.Get("role")
+	if !ok {
+		return 0, "", errors.New("role not found in context")
+	}
+
+	role, ok := roleVal.(string)
+	if !ok {
+		// This case should ideally not happen if the middleware is correct.
+		return 0, "", errors.New("role in context is not a string")
+	}
+
+	return userID, role, nil
 }
 
 // ----------------- Create -----------------
@@ -43,13 +60,12 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 
 // ----------------- Get All -----------------
 func (tc *TicketController) GetUserTickets(c *gin.Context) {
-	userID := c.GetUint("userID")
-
-	role, exists := c.Get("role")
-	fmt.Println(exists)
-	fmt.Println("role is ", role)
-
-	tickets, err := tc.service.GetUserTickets(userID, role.(string))
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+	tickets, err := tc.service.GetUserTickets(userID, role)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch tickets"})
 		return
@@ -67,14 +83,14 @@ func (tc *TicketController) GetUserTickets(c *gin.Context) {
 
 // ----------------- Get By ID -----------------
 func (tc *TicketController) GetTicketByID(c *gin.Context) {
-	userID := c.GetUint("userID")
 	id := c.Param("id")
 
-	role, exists := c.Get("role")
-	fmt.Println(exists)
-	fmt.Println("role is ", role)
-
-	ticket, err := tc.service.GetTicketByID(userID, id, role.(string))
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+	ticket, err := tc.service.GetTicketByID(userID, id, role)
 	if err != nil {
 		c.JSON(404, gin.H{"error": err.Error()})
 		return
@@ -85,16 +101,20 @@ func (tc *TicketController) GetTicketByID(c *gin.Context) {
 
 // ----------------- Update -----------------
 func (tc *TicketController) UpdateTicket(c *gin.Context) {
-	userID := c.GetUint("userID")
 	id := c.Param("id")
 
 	var req models.TicketUpdateRequest
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	ticket, err := tc.service.UpdateTicketByID(userID, id, req)
+	ticket, err := tc.service.UpdateTicketByID(userID, id, req, role)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
@@ -108,14 +128,14 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 
 // ----------------- Delete -----------------
 func (tc *TicketController) DeleteTicket(c *gin.Context) {
-	userID := c.GetUint("userID")
 	id := c.Param("id")
 
-	role, exists := c.Get("role")
-	fmt.Println(exists)
-	fmt.Println("role is ", role)
-
-	err := tc.service.DeleteTicketByID(userID, id, role.(string))
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+	err = tc.service.DeleteTicketByID(userID, id, role)
 	if err != nil {
 		c.JSON(404, gin.H{"error": err.Error()})
 		return

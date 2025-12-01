@@ -80,14 +80,18 @@ func (s *TicketService) UpdateTicketByID(
 	userID uint,
 	idStr string,
 	req models.TicketUpdateRequest,
+	role string,
 ) (*models.Ticket, error) {
+	if role == "USER" {
+		return nil, errors.New("not authorized to update  ticket")
+	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return nil, errors.New("invalid id")
 	}
 
-	ticket, err := s.repo.GetByID(userID, uint(id))
+	ticket, err := s.repo.GetOnlyByID(uint(id))
 	if err != nil {
 		return nil, errors.New("ticket not found")
 	}
@@ -123,7 +127,7 @@ func (s *TicketService) DeleteTicketByID(
 		return errors.New("invalid id")
 	}
 
-	ticket, err := s.repo.GetByID(userID, uint(id))
+	ticket, err := s.repo.GetOnlyByID(uint(id))
 	if err != nil {
 		return errors.New("ticket not found")
 	}
