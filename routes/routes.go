@@ -28,5 +28,7 @@ func RegisterRoutes(r *gin.Engine, authController *controllers.AuthController, t
 		ticket.GET("/:id", ticketController.GetTicketByID)
 		ticket.PUT("/:id", ticketController.UpdateTicket)
 		ticket.DELETE("/:id", ticketController.DeleteTicket)
+		ticket.PUT("/:id/assign", ticketController.AssignTicket)
+		ticket.PUT("/:id/unassign", ticketController.UnassignTicket)
 	}
 }

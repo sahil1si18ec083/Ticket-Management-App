@@ -30,7 +30,5 @@ func IsValidTransition(from, to Status) bool {
 		return to == StatusClosed
 	default:
 		return false
-
 	}
-
 }

@@ -18,7 +18,7 @@ func InitServer(db *gorm.DB) *gin.Engine {
 	authController := controllers.NewAuthController(authService)
 
 	ticketRepo := repositories.NewTicketRepository(db)
-	ticketService := services.NewTicketService(ticketRepo)
+	ticketService := services.NewTicketService(ticketRepo, userRepo)
 	ticketController := controllers.NewTicketController(ticketService)
 	r := gin.Default()
 	routes.RegisterRoutes(r, authController, ticketController)

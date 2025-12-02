@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 
 	"ticket-app-gin-golang/models"
 	"ticket-app-gin-golang/services"
@@ -144,4 +146,60 @@ func (tc *TicketController) DeleteTicket(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Ticket deleted successfully",
 	})
+}
+
+func (tc *TicketController) AssignTicket(c *gin.Context) {
+	id := c.Param("id")
+	var req models.TicketAssignRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request body",
+		})
+		return
+	}
+	if req.AssignedAgentID != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Assigned Agent not present",
+		})
+		return
+	}
+	assigned_agent_id := *req.AssignedAgentID
+	fmt.Printf("%T\n", assigned_agent_id)
+
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+
+	err = tc.service.AssignTicket(userID, id, role, assigned_agent_id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Ticket Assigned successfully",
+	})
+
+}
+func (tc *TicketController) UnassignTicket(c *gin.Context) {
+	id := c.Param("id")
+
+	userID, role, err := tc.getUserAndRole(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+	err = tc.service.UnAssignTicket(userID, id, role)
+	if err != nil {
+		c.JSON(404, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Ticket Unassigned successfully",
+	})
+
 }
