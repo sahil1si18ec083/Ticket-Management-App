@@ -92,8 +92,20 @@ func (s *TicketService) UpdateTicketByID(
 	}
 
 	ticket, err := s.repo.GetOnlyByID(uint(id))
+
 	if err != nil {
 		return nil, errors.New("ticket not found")
+	}
+	if ticket.Status == models.StatusClosed {
+		return nil, errors.New("cannot update closed ticket")
+	}
+	if req.Status != nil {
+		value, exists := models.StatusMap[string(*req.Status)]
+		if !exists {
+			return nil, errors.New("invalid status,allowed values are NEW,IN_PROGRESS,WAITING,RESOLVED,CLOSED")
+		}
+		ticket.Status = value
+
 	}
 
 	if req.Title != nil {
@@ -103,7 +115,6 @@ func (s *TicketService) UpdateTicketByID(
 	if req.Content != nil {
 		ticket.Content = *req.Content
 	}
-
 	if err := s.repo.Update(ticket); err != nil {
 		return nil, err
 	}
