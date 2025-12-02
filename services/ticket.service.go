@@ -104,6 +104,13 @@ func (s *TicketService) UpdateTicketByID(
 		if !exists {
 			return nil, errors.New("invalid status,allowed values are NEW,IN_PROGRESS,WAITING,RESOLVED,CLOSED")
 		}
+		from_status := ticket.Status
+		to_status := value
+		if !models.IsValidTransition(from_status, to_status) {
+			return nil, errors.New("invalid transition")
+
+		}
+
 		ticket.Status = value
 
 	}

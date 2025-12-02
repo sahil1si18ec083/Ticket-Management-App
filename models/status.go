@@ -17,3 +17,20 @@ var StatusMap = map[string]Status{
 	"RESOLVED":    StatusResolved,
 	"CLOSED":      StatusClosed,
 }
+
+func IsValidTransition(from, to Status) bool {
+	switch from {
+	case StatusNew:
+		return to == StatusInProgress || to == StatusWaiting
+	case StatusInProgress:
+		return to == StatusWaiting || to == StatusResolved
+	case StatusWaiting:
+		return to == StatusResolved || to == StatusInProgress
+	case StatusResolved:
+		return to == StatusClosed
+	default:
+		return false
+
+	}
+
+}
