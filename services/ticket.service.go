@@ -75,6 +75,13 @@ func (s *TicketService) GetTicketByID(
 
 	return s.repo.GetOnlyByID(uint(id))
 }
+func applyWorkflowRules(from_status models.Status, to_status models.Status, ticket *models.Ticket, userID uint) {
+	if from_status == models.StatusNew && to_status == models.StatusInProgress {
+		if ticket.AssignedAgentID == nil {
+			ticket.AssignedAgentID = &userID
+		}
+	}
+}
 
 // --------------- Update Ticket ---------------
 func (s *TicketService) UpdateTicketByID(
@@ -112,7 +119,13 @@ func (s *TicketService) UpdateTicketByID(
 
 		}
 
-		ticket.Status = value
+		if ticket.Status != value {
+			// add applyWorkflowRules here
+
+			applyWorkflowRules(from_status, to_status, ticket, userID)
+
+			ticket.Status = value
+		}
 
 	}
 
@@ -214,6 +227,12 @@ func (s *TicketService) AssignTicket(userID uint,
 	}
 	if ticket.Status == models.StatusClosed {
 		return errors.New("cannot assign closed ticket")
+	}
+	if string(user.Role) == string(models.RoleAgent) && user.ID != userID {
+		return errors.New("agent → can assign only to self")
+	}
+	if ticket.AssignedAgentID != nil && *ticket.AssignedAgentID == assigned_agent_id {
+		return errors.New("ticket already assigned to this agent")
 	}
 
 	ticket.AssignedAgentID = &assigned_agent_id
