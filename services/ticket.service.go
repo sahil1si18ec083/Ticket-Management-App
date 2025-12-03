@@ -123,12 +123,6 @@ func (s *TicketService) UpdateTicketByID(
 	if req.Content != nil {
 		ticket.Content = *req.Content
 	}
-	if req.AssignedAgentID != nil {
-		if role == string(models.RoleUser) {
-			return nil, errors.New("users cannot assign tickets")
-		}
-		ticket.AssignedAgentID = req.AssignedAgentID
-	}
 	fmt.Println(ticket)
 	if err := s.repo.Update(ticket); err != nil {
 		return nil, err

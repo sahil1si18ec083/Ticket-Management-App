@@ -158,7 +158,8 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 		})
 		return
 	}
-	if req.AssignedAgentID != nil {
+
+	if req.AssignedAgentID == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Assigned Agent not present",
 		})

@@ -7,10 +7,9 @@ type TicketRequest struct {
 	Content string `json:"content"`
 }
 type TicketUpdateRequest struct {
-	Title           *string `json:"title"`
-	Content         *string `json:"content"`
-	Status          *Status `json:"status"`
-	AssignedAgentID *uint   `json:"assigned_agent_id"`
+	Title   *string `json:"title"`
+	Content *string `json:"content"`
+	Status  *Status `json:"status"`
 }
 type TicketResponse struct {
 	ID        uint      `json:"id"`
